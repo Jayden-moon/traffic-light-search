@@ -1,0 +1,12 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+}
+
+dependencies {
+    implementation project(':trafficlight-domain')
+    implementation project(':trafficlight-usecase')
+    runtimeOnly project(':trafficlight-data')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+}

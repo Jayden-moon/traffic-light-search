@@ -1,0 +1,4 @@
+// Domain layer - NO external dependencies (pure Java + Lombok only)
+dependencies {
+    // No Spring, no Elasticsearch - pure domain
+}

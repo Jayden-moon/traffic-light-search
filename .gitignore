@@ -1,0 +1,27 @@
+# Java / Gradle
+.gradle/
+build/
+*.class
+*.jar
+
+# Node.js
+node_modules/
+.next/
+out/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (large files)
+data/*.json
+전국신호등표준데이터.json
+
+# Env / Logs
+.env*
+*.log

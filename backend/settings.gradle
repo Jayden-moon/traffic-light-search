@@ -1,0 +1,6 @@
+rootProject.name = 'traffic-light-backend'
+
+include 'trafficlight-domain'
+include 'trafficlight-usecase'
+include 'trafficlight-data'
+include 'trafficlight-api'

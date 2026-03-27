@@ -1,0 +1,14 @@
+spring:
+  elasticsearch:
+    uris: http://localhost:9200
+
+server:
+  port: 8080
+
+trafficlight:
+  data-file: /Users/cjmoon/dev/workspace/traffic-light-search/data/전국신호등표준데이터.json
+  index-name: traffic-lights
+  bulk-size: 1000
+  api:
+    base-url: http://api.data.go.kr/openapi/tn_pubr_public_traffic_light_api
+    service-key: 7cb08b3a8a4338d70574b7fad77eded3fd0ae3e62d31ca4e3cc434a3641aee09

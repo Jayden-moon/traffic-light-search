@@ -1,0 +1,160 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "analyzer": {
+        "korean": {
+          "type": "custom",
+          "tokenizer": "nori_tokenizer",
+          "filter": ["lowercase", "nori_readingform"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "sidoName": {
+        "type": "keyword"
+      },
+      "sigunguName": {
+        "type": "keyword"
+      },
+      "roadType": {
+        "type": "keyword"
+      },
+      "roadRouteNumber": {
+        "type": "keyword"
+      },
+      "roadRouteName": {
+        "type": "text",
+        "analyzer": "korean",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "roadRouteDirection": {
+        "type": "keyword"
+      },
+      "roadNameAddress": {
+        "type": "text",
+        "analyzer": "korean",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 512
+          }
+        }
+      },
+      "lotNumberAddress": {
+        "type": "text",
+        "analyzer": "korean",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 512
+          }
+        }
+      },
+      "latitude": {
+        "type": "float"
+      },
+      "longitude": {
+        "type": "float"
+      },
+      "location": {
+        "type": "geo_point"
+      },
+      "signalInstallType": {
+        "type": "keyword"
+      },
+      "roadShape": {
+        "type": "keyword"
+      },
+      "isMainRoad": {
+        "type": "keyword"
+      },
+      "trafficLightId": {
+        "type": "keyword"
+      },
+      "trafficLightCategory": {
+        "type": "keyword"
+      },
+      "lightColorType": {
+        "type": "keyword"
+      },
+      "signalMethod": {
+        "type": "keyword"
+      },
+      "signalSequence": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "signalDuration": {
+        "type": "keyword"
+      },
+      "lightSourceType": {
+        "type": "keyword"
+      },
+      "signalControlMethod": {
+        "type": "keyword"
+      },
+      "signalTimeDecisionMethod": {
+        "type": "keyword"
+      },
+      "flashingLightEnabled": {
+        "type": "keyword"
+      },
+      "flashingStartTime": {
+        "type": "keyword"
+      },
+      "flashingEndTime": {
+        "type": "keyword"
+      },
+      "hasPedestrianSignal": {
+        "type": "keyword"
+      },
+      "hasRemainingTimeDisplay": {
+        "type": "keyword"
+      },
+      "hasAudioSignal": {
+        "type": "keyword"
+      },
+      "roadSignSerialNumber": {
+        "type": "keyword"
+      },
+      "managementAgency": {
+        "type": "text",
+        "analyzer": "korean",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "managementPhone": {
+        "type": "keyword"
+      },
+      "dataReferenceDate": {
+        "type": "date",
+        "format": "yyyy-MM-dd||yyyyMMdd||epoch_millis",
+        "ignore_malformed": true
+      },
+      "providerCode": {
+        "type": "keyword"
+      },
+      "providerName": {
+        "type": "keyword"
+      }
+    }
+  }
+}
