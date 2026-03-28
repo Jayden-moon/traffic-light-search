@@ -5,15 +5,25 @@ COPY gradle gradle
 COPY gradlew .
 COPY build.gradle .
 COPY settings.gradle .
-COPY src src
+COPY trafficlight-domain trafficlight-domain
+COPY trafficlight-usecase trafficlight-usecase
+COPY trafficlight-data trafficlight-data
+COPY trafficlight-api trafficlight-api
 
-RUN chmod +x gradlew && ./gradlew bootJar --no-daemon
+RUN chmod +x gradlew && ./gradlew :trafficlight-api:bootJar --no-daemon -x test
 
 FROM eclipse-temurin:17-jre
 
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
-COPY data/ data/
+
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
+COPY --from=build /app/trafficlight-api/build/libs/*.jar app.jar
+COPY data/ /app/data/
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 8080
 

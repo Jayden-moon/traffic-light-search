@@ -1,0 +1,18 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: traffic-light
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      # Frontend: localhost:30000
+      - containerPort: 30000
+        hostPort: 30000
+        protocol: TCP
+      # Backend API: localhost:30080
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+      # Elasticsearch: localhost:30920
+      - containerPort: 30920
+        hostPort: 30920
+        protocol: TCP

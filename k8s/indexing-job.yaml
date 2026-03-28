@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: es-indexing
+  namespace: traffic-light
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-backend
+          image: curlimages/curl:8.5.0
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for backend to be ready..."
+              until curl -sf http://backend:8080/api/index/status > /dev/null 2>&1; do
+                echo "  backend not ready, retrying in 5s..."
+                sleep 5
+              done
+              echo "Backend is ready."
+      containers:
+        - name: indexing
+          image: curlimages/curl:8.5.0
+          env:
+            - name: ADMIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: ADMIN_API_KEY
+          command:
+            - sh
+            - -c
+            - |
+              echo "=== Elasticsearch Indexing Job ==="
+
+              # 인덱스 상태 확인
+              STATUS=$(curl -sf http://backend:8080/api/index/status)
+              echo "Current status: $STATUS"
+
+              # 이미 데이터가 있으면 스킵
+              INDEXED=$(echo "$STATUS" | grep -o '"indexed":[0-9]*' | cut -d: -f2)
+              if [ "$INDEXED" -gt 0 ] 2>/dev/null; then
+                echo "Already indexed $INDEXED documents. Skipping."
+                exit 0
+              fi
+
+              # 인덱스 생성
+              echo "Creating index..."
+              curl -sf -X POST http://backend:8080/api/index/create \
+                -H "X-Admin-Api-Key: $ADMIN_API_KEY"
+              echo ""
+
+              # 데이터 로드
+              echo "Loading data..."
+              RESULT=$(curl -sf -X POST http://backend:8080/api/index/load \
+                -H "X-Admin-Api-Key: $ADMIN_API_KEY")
+              echo "Result: $RESULT"
+
+              # 결과 검증
+              FAILED=$(echo "$RESULT" | grep -o '"failed":[0-9]*' | cut -d: -f2)
+              if [ "$FAILED" -gt 1000 ] 2>/dev/null; then
+                echo "ERROR: Too many failures ($FAILED). Check logs."
+                exit 1
+              fi
+
+              echo "=== Indexing complete ==="
