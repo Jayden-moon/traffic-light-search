@@ -11,4 +11,4 @@ trafficlight:
   bulk-size: 1000
   api:
     base-url: http://api.data.go.kr/openapi/tn_pubr_public_traffic_light_api
-    service-key: ${SERVICE_KEY}
+    service-key: ${SERVICE_KEY:}
