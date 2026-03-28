@@ -9,4 +9,7 @@ dependencies {
     runtimeOnly project(':trafficlight-data')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

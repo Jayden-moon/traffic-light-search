@@ -167,6 +167,18 @@ docker-compose up -d
 
 ```bash
 cd backend
+```
+
+프로젝트 루트(`backend/`)에 `.env` 파일을 생성하고 환경변수를 설정합니다:
+
+```bash
+# backend/.env
+SERVICE_KEY=your_public_data_api_service_key
+```
+
+> `SERVICE_KEY`는 [공공데이터포털](https://www.data.go.kr)에서 발급받은 API 인증키입니다.
+
+```bash
 ./gradlew :trafficlight-api:bootRun
 # API: http://localhost:8080
 ```
