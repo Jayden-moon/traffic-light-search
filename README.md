@@ -26,6 +26,12 @@
 
 ![Docker](https://img.shields.io/badge/Docker%20Compose-ES%20%2B%20Kibana-2496ED?logo=docker&logoColor=white)
 
+**Security & Testing**
+
+![Spring Security](https://img.shields.io/badge/Spring%20Security-API%20Key-6DB33F?logo=springsecurity&logoColor=white)
+![JUnit5](https://img.shields.io/badge/JUnit%205-71%20tests-25A162?logo=junit5&logoColor=white)
+![Jest](https://img.shields.io/badge/Jest-33%20tests-C21325?logo=jest&logoColor=white)
+
 ## Features
 
 - **전문 검색** - Elasticsearch nori 분석기를 활용한 한국어 주소 검색
@@ -35,6 +41,10 @@
 - **통계 대시보드** - 시도별/도로종류별 분포 차트 (Recharts)
 - **벌크 인덱싱** - 50,000건 스트리밍 파싱 + 1,000건 단위 벌크 처리
 - **API 연동 준비** - 공공데이터 API upsert 기반 동기화 구조
+- **인증/인가** - Spring Security + API Key 기반 관리 엔드포인트 보호
+- **Rate Limiting** - IP 기반 요청 제한 (공개 60회/분, 관리 10회/분)
+- **입력 검증** - 페이지네이션/좌표/거리 파라미터 서버사이드 검증
+- **테스트** - 백엔드 38개 + 프론트엔드 33개 = 71개 테스트 케이스
 
 ## Architecture
 
@@ -125,14 +135,20 @@ traffic-light-search/
 │       └── com.trafficlight.api
 │           ├── controller/             # REST 컨트롤러 4개
 │           ├── dto/                    # 응답 DTO 3개
-│           └── config/                 # UseCaseConfig, CorsConfig
+│           └── config/                 # Security, RateLimit, CORS, ExceptionHandler
 │
-└── frontend/
-    └── src/
-        ├── app/                        # Pages (search, map, dashboard)
-        ├── components/                 # UI 컴포넌트 8개
-        ├── lib/api.ts                  # API 클라이언트
-        └── types/trafficLight.ts       # TypeScript 인터페이스
+├── frontend/
+│   └── src/
+│       ├── app/                        # Pages (search, map, dashboard)
+│       ├── components/                 # UI 컴포넌트 8개
+│       ├── lib/api.ts                  # API 클라이언트
+│       ├── types/trafficLight.ts       # TypeScript 인터페이스
+│       └── __tests__/                  # Jest 테스트 (33개)
+│
+├── doc/
+│   └── API_SPECIFICATION.md            # REST API 명세서
+├── TEST_DOCUMENTATION.md               # 테스트 설계 문서
+└── SECURITY_AUDIT.md                   # 보안 점검 보고서
 ```
 
 ## Getting Started
@@ -193,13 +209,20 @@ npm install && npm run dev
 
 ### 4. Index Data
 
+관리 엔드포인트는 `X-Admin-Api-Key` 헤더가 필요합니다.
+
 ```bash
-curl -X POST http://localhost:8080/api/index/create
-curl -X POST http://localhost:8080/api/index/load
-# 50,000건 인덱싱 (약 10~20초)
+curl -X POST http://localhost:8080/api/index/create \
+  -H "X-Admin-Api-Key: dev-admin-key-change-in-production"
+
+curl -X POST http://localhost:8080/api/index/load \
+  -H "X-Admin-Api-Key: dev-admin-key-change-in-production"
+# 50,000건 인덱싱 (약 3~5초)
 ```
 
 또는 웹 헤더의 **데이터 인덱싱** 버튼 클릭.
+
+> 프로덕션 배포 시 `ADMIN_API_KEY` 환경변수를 반드시 변경하세요.
 
 ## API Endpoints
 
@@ -211,14 +234,14 @@ curl -X POST http://localhost:8080/api/index/load
 | `GET` | `/api/search/geo?lat=37.5&lon=127.0&distance=5km` | 위치 기반 반경 검색 |
 | `GET` | `/api/search/filters/{field}` | 필터 옵션 목록 |
 
-### Index Management
+### Index Management (인증 필요)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/index/create` | 인덱스 생성 (nori 매핑 적용) |
 | `POST` | `/api/index/load` | JSON 파일 벌크 인덱싱 |
 | `DELETE` | `/api/index/delete` | 인덱스 삭제 |
-| `GET` | `/api/index/status` | 인덱스 상태 조회 |
+| `GET` | `/api/index/status` | 인덱스 상태 조회 (인증 불필요) |
 
 ### Aggregations
 
@@ -229,11 +252,13 @@ curl -X POST http://localhost:8080/api/index/load
 | `GET` | `/api/aggregations/by-signal-type` | 신호등구분별 |
 | `GET` | `/api/aggregations/summary` | 통합 집계 |
 
-### Data Sync
+### Data Sync (인증 필요)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/sync` | 공공데이터 API 동기화 (ID 기반 upsert) |
+
+> 전체 API 명세는 [doc/API_SPECIFICATION.md](doc/API_SPECIFICATION.md)를 참조하세요.
 
 ## Elasticsearch Design
 
@@ -296,3 +321,55 @@ Elasticsearch 인덱스 (50,000 문서)
 | 한글→영문 필드 변환 | API/프론트 전구간 영문 통일, 원본은 JsonDataLoader에서 변환 |
 | ID 기반 upsert | API 동기화 시 중복 인덱싱 방지 |
 | nori 분석기 | 한국어 주소 형태소 분석 (띄어쓰기 무관 검색) |
+| Spring Security + API Key | 관리 엔드포인트 인증, constant-time 비교로 타이밍 공격 방어 |
+| Rate Limiting | ConcurrentHashMap 기반 IP별 요청 제한, 분산 환경 시 Redis로 교체 가능 |
+| GlobalExceptionHandler | 스택트레이스 노출 차단, 안전한 에러 메시지만 반환 |
+| FieldNameMapping 공유 클래스 | 한글→영문 필드 매핑 중복 제거, domain 모듈에 배치 |
+
+## Security
+
+OWASP Top 10 기반 보안 점검을 수행하고 취약점을 수정했습니다.
+
+| 항목 | 대응 |
+|------|------|
+| A01: Broken Access Control | API Key 인증 + 역할 기반 엔드포인트 보호 |
+| A02: Cryptographic Failures | 환경변수 기반 비밀 관리, HTTPS 외부 API 호출 |
+| A03: Injection | `@Min`/`@Max`/`@DecimalMin`/`@DecimalMax`/`@Pattern` 입력 검증 |
+| A04: Insecure Design | GlobalExceptionHandler, 안전한 에러 메시지 |
+| A05: Security Misconfiguration | 보안 헤더, CORS 명시적 설정, ES `dynamic: strict` |
+| A07: Auth Failures | 시작 시 Admin Key 검증, fail-fast |
+
+상세: [SECURITY_AUDIT.md](SECURITY_AUDIT.md)
+
+## Testing
+
+### 실행
+
+```bash
+# 백엔드 (38개 테스트)
+cd backend && ./gradlew test
+
+# 프론트엔드 (33개 테스트)
+cd frontend && npm test
+```
+
+### 테스트 구조
+
+| 레이어 | 유형 | 테스트 수 |
+|--------|------|-----------|
+| Domain (Model, Exception, FieldNameMapping) | 순수 단위 테스트 | 25개 |
+| UseCase (Search, Index, Aggregation, DataSync) | Mockito 단위 테스트 | 27개 |
+| Controller (4개 + Security 통합) | MockMvc 슬라이스 테스트 | 24개 |
+| DTO (SearchResponse, AggregationResponse, IndexStatus) | 변환 테스트 | 7개 |
+| Frontend API 유틸리티 | Jest Mock 테스트 | 13개 |
+| Frontend 컴포넌트 (SearchForm, ResultsTable, StatsCard) | React Testing Library | 20개 |
+
+상세: [TEST_DOCUMENTATION.md](TEST_DOCUMENTATION.md)
+
+## Documents
+
+| 문서 | 설명 |
+|------|------|
+| [doc/API_SPECIFICATION.md](doc/API_SPECIFICATION.md) | REST API 명세서 (14개 엔드포인트, 요청/응답 예시) |
+| [TEST_DOCUMENTATION.md](TEST_DOCUMENTATION.md) | 테스트 설계 전략, 71개 케이스 상세, 실행 방법 |
+| [SECURITY_AUDIT.md](SECURITY_AUDIT.md) | OWASP Top 10 기반 보안 점검 보고서 (20건) |
