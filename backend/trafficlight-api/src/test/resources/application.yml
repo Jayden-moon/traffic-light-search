@@ -1,0 +1,10 @@
+trafficlight:
+  security:
+    admin-key: dev-admin-key-change-in-production
+  cors:
+    allowed-origins: http://localhost:3000
+spring:
+  elasticsearch:
+    uris: http://localhost:9200
+    username: ""
+    password: ""
